@@ -375,8 +375,10 @@
 <script>
 (function () {
     const $ = id => document.getElementById(id);
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const isIOS    = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const urlParams = new URLSearchParams(window.location.search);
+    const forcePC   = urlParams.get('pc') === '1';
+    const isMobile  = !forcePC && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (isIOS) document.body.classList.add('is-ios');
 
     const IMG_PREFIX = 'https://myqcloud.fieldshortcut.cn/space/';

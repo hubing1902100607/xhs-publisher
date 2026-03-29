@@ -542,15 +542,19 @@
     }
 
     function openXHS() {
+        // 先尝试 scheme，失败则跳官网触发"打开App"弹窗
         let tried = false;
         const onHide = () => { tried = true; document.removeEventListener('visibilitychange', onHide); };
         document.addEventListener('visibilitychange', onHide);
         window.location.href = 'xhsdiscover://';
         setTimeout(() => {
             document.removeEventListener('visibilitychange', onHide);
-            if (!tried) showToast('请手动打开小红书 APP', 3000);
-        }, 1500);
+            if (!tried) {
+                window.location.href = 'https://www.xiaohongshu.com';
+            }
+        }, 1000);
     }
+
 
     window.addEventListener('DOMContentLoaded', () => {
         const data = getParams();

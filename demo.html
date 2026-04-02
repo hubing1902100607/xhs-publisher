@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书发布助手 - 测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #ff2442;
+            text-align: center;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #ff2442;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #ff2442;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #e61e3a;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        #qrcode {
+            margin: 20px auto;
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tip {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .url-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+    </style>
+    <!-- 引入QR Code生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 小红书发布助手 - 测试工具</h1>
+        
+        <div class="tip">
+            <strong>💡 使用说明：</strong><br>
+            1. 填写笔记内容（模拟飞书表格数据）<br>
+            2. 点击生成二维码<br>
+            3. 用手机扫描二维码测试发布流程<br>
+            4. 确认H5页面功能正常后，即可对接飞书
+        </div>
+        
+        <div class="section">
+            <label>📝 笔记ID：</label>
+            <input type="text" id="noteId" value="TEST001" placeholder="例如：001">
+            
+            <label>📌 标题：</label>
+            <input type="text" id="title" value="【测试】春日穿搭分享｜温柔又甜美" placeholder="输入笔记标题">
+            
+            <label>📄 正文内容：</label>
+            <textarea id="content" placeholder="输入正文内容，支持换行">今天分享一套超级温柔的春日穿搭💕
+
+👗 上衣：米白色针织开衫
+👖 下装：浅蓝色牛仔裤
+👞 鞋子：小白鞋
+
+#春日穿搭 #温柔风 #日常OOTD</textarea>
+            
+            <label>📷 图片URL（每行一个）：</label>
+            <textarea id="images" placeholder="输入图片URL，每行一个">https://picsum.photos/400/400?random=1
+https://picsum.photos/400/400?random=2
+https://picsum.photos/400/400?random=3</textarea>
+        </div>
+        
+        <button onclick="generateQRCode()">🎨 生成二维码</button>
+        
+        <div class="result" id="result">
+            <h3>✅ 二维码已生成</h3>
+            <div class="qr-container">
+                <div id="qrcode"></div>
+            </div>
+            
+            <div class="tip">
+                <strong>📱 测试步骤：</strong><br>
+                1. 用手机扫描上方二维码<br>
+                2. 在H5页面测试所有功能<br>
+                3. 检查图片保存、文案复制是否正常
+            </div>
+            
+            <strong>🔗 生成的URL：</strong>
+            <div class="url-box" id="generatedUrl"></div>
+            
+            <button onclick="copyUrl()" style="margin-top: 10px; background: #28a745;">📋 复制URL</button>
+        </div>
+    </div>
+
+    <script>
+        let qrcodeInstance = null;
+        
+        function generateQRCode() {
+            // 获取输入值
+            const noteId = document.getElementById('noteId').value || 'TEST001';
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const imagesText = document.getElementById('images').value;
+            
+            // 验证
+            if (!title) {
+                alert('请输入标题');
+                return;
+            }
+            
+            // 处理图片URL
+            const images = imagesText
+                .split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0)
+                .join(',');
+            
+            // 构建URL参数
+            const baseUrl = window.location.href.replace('demo.html', 'xhs_publish.html');
+            const params = new URLSearchParams({
+                id: noteId,
+                title: title,
+                content: content,
+                images: images
+            });
+            
+            const fullUrl = `${baseUrl}?${params.toString()}`;
+            
+            // 显示结果区域
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('generatedUrl').textContent = fullUrl;
+            
+            // 清除旧的二维码
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            
+            // 生成新的二维码
+            qrcodeInstance = new QRCode(qrcodeContainer, {
+                text: fullUrl,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // 滚动到结果区域
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function copyUrl() {
+            const url = document.getElementById('generatedUrl').textContent;
+            
+            // 复制到剪贴板
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('✅ URL已复制到剪贴板');
+                });
+            } else {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ URL已复制到剪贴板');
+            }
+        }
+        
+        // 页面加载时自动生成示例二维码
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('📱 小红书发布助手测试工具已加载');
+            console.log('请填写内容并生成二维码进行测试');
+        });
+    </script>
+</body>
+</html>
